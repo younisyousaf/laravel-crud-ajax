@@ -54,6 +54,28 @@
             </div>
         </div>
     </div>
+    <!-- Delete Confirmation Modal Start -->
+    <div class="modal fade" id="delete_confirmation_modal" tabindex="-1" aria-labelledby="deleteConfirmationLabel"
+        aria-hidden="true">
+        <div class="modal-dialog ">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="deleteConfirmationLabel">Delete Confirmation</h1>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this customer?</p>
+                    <input type="hidden" id="delete_id">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirm_delete_btn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Delete Confirmation Modal End -->
+
     {{-- Edit Modal --}}
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editCustomerModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -253,9 +275,29 @@
                         getData();
                     }
                 })
-            })
-        })
+            });
+            // Delete Customer
+            let deleteUserId;
 
+            // Delete the User - Show Confirmation Modal
+            $(document).on('click', '.delete-btn', function() {
+                deleteUserId = $(this).parent().parent().find('.customer-id').text();
+                $('#delete_confirmation_modal').modal('show');
+            });
+            $(document).on('click', '#confirm_delete_btn', function(e) {
+                e.preventDefault();
+                $.ajax({
+                    type: "DELETE",
+                    url: "/customers/" + deleteUserId,
+                    success: function(response) {
+                        $('#delete_confirmation_modal').modal('hide');
+                        $('#customers').empty();
+                        getData();
+                    }
+                })
+            });
+        })
+        // Get All the Data
         function getData() {
             $.ajax({
                 type: "GET",
