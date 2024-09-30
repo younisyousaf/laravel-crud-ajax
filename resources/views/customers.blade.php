@@ -43,6 +43,8 @@
                                         <th scope="col">Customer Name</th>
                                         <th scope="col">Email</th>
                                         <th scope="col">Address</th>
+                                        <th scope="col">Image</th>
+                                        <th scope="col">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="customers">
@@ -86,24 +88,39 @@
                 </div>
                 <div class="modal-body">
                     <form>
-                        @method('PUT')
+                        @method('POST')
                         @csrf
-                        <input type="hidden" name="update-customerid" id="update-customerid">
+                        <input type="hidden" name="customerid" id="update-customerid">
                         <div class="mb-3">
                             <label for="update-customername" class="form-label">Customer Name</label>
-                            <input type="text" class="form-control" id="update-customername"
-                                name="update-customername" aria-describedby="update-customername">
+                            <input type="text" class="form-control" id="update-customername" name="customername">
+                            @error('customername')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
 
                         </div>
                         <div class="mb-3">
                             <label for="update-customeremail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="update-customeremail"
-                                name="update-customeremail" aria-describedby="update-customeremail">
+                            <input type="email" class="form-control" id="update-customeremail" name="customeremail">
+                            @error('customeremail')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
                         <div class="mb-3">
                             <label for="update-customeraddress" class="form-label">Address</label>
                             <input type="text" class="form-control" id="update-customeraddress"
-                                name="update-customeraddress" aria-describedby="update-customeraddress">
+                                name="customeraddress">
+                            @error('customeraddress')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="update-customerimage" class="form-label">Image</label>
+                            <input type="file" class="form-control" id="update-customerimage"
+                                name="customerimage">
+
+                            <img src="" alt="User Image" width="45" height="45"
+                                id="update-image-preview">
                         </div>
                     </form>
                 </div>
@@ -125,7 +142,10 @@
                 <div class="modal-body">
                     <div class="container">
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-4">
+                                <img src="" id="info-customer-image" class="img-fluid" alt="customer image">
+                            </div>
+                            <div class="col-md-8">
                                 <p id="info-customer-name"></p>
                                 <p id="info-customer-email"></p>
                                 <p id="info-customer-address"></p>
@@ -139,7 +159,7 @@
             </div>
         </div>
     </div>
-
+    {{-- Add Modal --}}
     <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addCustomerModalLabel"
         aria-hidden="true">
         <div class="modal-dialog">
@@ -156,16 +176,34 @@
                             <input type="text" class="form-control" id="customername" name="customername"
                                 aria-describedby="customername">
 
+                            @error('customername')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+
                         </div>
                         <div class="mb-3">
                             <label for="customeremail" class="form-label">Email</label>
                             <input type="email" class="form-control" id="customeremail" name="customeremail"
                                 aria-describedby="customeremail">
+
+                            @error('customeremail')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
                         <div class="mb-3">
                             <label for="customeraddress" class="form-label">Address</label>
                             <input type="text" class="form-control" id="customeraddress" name="customeraddress"
                                 aria-describedby="customeraddress">
+
+                            @error('customeraddress')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="customerimage" class="form-label">Image</label>
+                            <input type="file" class="form-control" id="customerimage" name="customerimage"
+                                aria-describedby="customerimage">
+
                         </div>
                     </form>
                 </div>
@@ -196,15 +234,18 @@
                 let customername = $('#customername').val();
                 let customeremail = $('#customeremail').val();
                 let customeraddress = $('#customeraddress').val();
+                let formData = new FormData();
+                formData.append('customername', customername);
+                formData.append('customeremail', customeremail);
+                formData.append('customeraddress', customeraddress);
+                formData.append('customerimage', $('#customerimage')[0].files[0]);
 
                 $.ajax({
                     type: "POST",
                     url: "/customers",
-                    data: {
-                        'customername': customername,
-                        'customeremail': customeremail,
-                        'customeraddress': customeraddress
-                    },
+                    data: formData,
+                    contentType: false,
+                    processData: false,
                     success: function(response) {
                         $('#addModal').modal('hide');
                         $('#customername').val('');
@@ -230,6 +271,8 @@
                             .customeremail);
                         $('#info-customer-address').text("Customer Address: " + response
                             .customer.customeraddress);
+                        $('#info-customer-image').attr('src', '/images/' + response.customer
+                            .customerimage);
                         $('#infoModal').modal('show');
                     }
                 })
@@ -246,6 +289,9 @@
                         $('#update-customername').val(response.customer.customername);
                         $('#update-customeremail').val(response.customer.customeremail);
                         $('#update-customeraddress').val(response.customer.customeraddress);
+                        $('#update-image-preview').attr('src', '/images/' + response.customer
+                            .customerimage);
+                        // $('#update-customerimage').val(response.customer.customerimage);
                         $('#editModal').modal('show');
                     }
                 })
@@ -254,28 +300,36 @@
             $(document).on('click', '#update-customer', function(e) {
                 e.preventDefault();
                 let customerId = $('#update-customerid').val();
-                let customername = $('#update-customername').val();
-                let customeremail = $('#update-customeremail').val();
-                let customeraddress = $('#update-customeraddress').val();
+                let formData = new FormData();
+
+                formData.append('customername', $('#update-customername').val());
+                formData.append('customeremail', $('#update-customeremail').val());
+                formData.append('customeraddress', $('#update-customeraddress').val());
+                console.log("Test", formData);
+                if ($('#update-customerimage')[0].files[0]) {
+                    formData.append('customerimage', $('#update-customerimage')[0].files[0]);
+                }
+
                 $.ajax({
-                    type: "PUT",
-                    url: "/customers/" + customerId,
-                    data: {
-                        'customername': customername,
-                        'customeremail': customeremail,
-                        'customeraddress': customeraddress
-                    },
+                    type: "POST",
+                    url: "/customers/update/" + customerId,
+                    data: formData,
+                    contentType: false, // Important: do not set content type
+                    processData: false, // Important: do not process data
                     success: function(response) {
                         $('#editModal').modal('hide');
                         $('#update-customerid').val('');
                         $('#update-customername').val('');
                         $('#update-customeremail').val('');
                         $('#update-customeraddress').val('');
-                        $('#customers').empty();
                         getData();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error updating customer:", error);
                     }
-                })
+                });
             });
+
             // Delete Customer
             let deleteUserId;
 
@@ -302,21 +356,28 @@
             $.ajax({
                 type: "GET",
                 url: "/customers",
-                data: "type=options",
+                data: {
+                    type: 'options'
+                },
                 // dataType: "json/application",
                 success: function(response) {
-
+                    $('#customers').empty();
                     $.each(response.customers, function(indexInArray, valueOfElement) {
                         $('#customers').append(
                             '<tr>' +
-                            '<td class="customer-id">' + valueOfElement['id'] +
-                            '</td>\<td>' + valueOfElement['customername'] + '</td>\<td>' +
-                            valueOfElement['customeremail'] + '</td>\<td>' + valueOfElement[
-                                'customeraddress'] +
-                            '</td>\<td><button id="info" class="btn btn-info info-btn">Info</button> <button id="edit" class="btn btn-primary edit-btn">Edit</button> <button id="delete" class="btn btn-danger delete-btn">Delete</button></td>' +
-                            '</tr>',
-                        )
+                            '<td class="customer-id">' + valueOfElement['id'] + '</td>' +
+                            '<td>' + valueOfElement['customername'] + '</td>' +
+                            '<td>' + valueOfElement['customeremail'] + '</td>' +
+                            '<td>' + valueOfElement['customeraddress'] + '</td>' +
+                            '<td><img src="images/' + valueOfElement['customerimage'] +
+                            '" alt="Customer Image" style="width: 100px; height: auto;"></td>' +
+                            '<td><button id="info" class="btn btn-info info-btn">Info</button> ' +
+                            '<button id="edit" class="btn btn-primary edit-btn">Edit</button> ' +
+                            '<button id="delete" class="btn btn-danger delete-btn">Delete</button></td>' +
+                            '</tr>'
+                        );
                     });
+
                 }
             });
         }

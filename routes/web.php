@@ -9,3 +9,4 @@ Route::get('/', function () {
 
 
 Route::apiResource('/customers', CustomerController::class);
+Route::post('/customers/update/{id}', [CustomerController::class, 'update'])->name('customers.update');

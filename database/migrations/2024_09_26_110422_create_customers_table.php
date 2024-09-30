@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('customeremail');
             $table->string('customerphone');
             $table->string('customeraddress');
+            $table->string('customerimage')->nullable();
             $table->timestamps();
         });
     }
